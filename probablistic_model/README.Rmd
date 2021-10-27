@@ -1,0 +1,219 @@
+---
+title: "Generate borrowability scores with a probabilistic model of segment borrowability"
+author: "Steven Moran and Elad Eisen"
+date: "(`r format(Sys.time(), '%d %B, %Y')`)"
+output:
+  github_document:
+    toc: true
+bibliography: '../bibliography.bib'  
+---
+  
+# Overview
+
+This supplementary materials for "Defining and operationalizing borrowability for language contact research: Phonological segment borrowing as a case study" uses the R programming language [@R] and the following R libraries [@tidyverse;@knitr].
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr)
+```
+
+Load the data from the [CLDF format](https://cldf.clld.org) [@Forkel_etal2018] and combine the tables into single dataframes for [PHOIBLE](https://phoible.org) [@MoranMcCloy2019] and [SegBo](https://github.com/segbo-db/segbo) [@segbo].
+
+```{r, message=FALSE}
+values <- read_csv('../data/segbo/cldf/values.csv')
+languages <- read_csv('../data/segbo/cldf/languages.csv')
+segbo <- left_join(values, languages, by=c("Language_ID"="ID"))
+
+values <- read_csv('../data/phoible/cldf/values.csv')
+languages <- read_csv('../data/phoible/cldf/languages.csv')
+phoible <- left_join(values, languages, by=c("Language_ID"="ID"))
+```
+
+A segment's borrowability factor `bS` is calculated by @Eisen2019, pg60:
+
+$$
+b_s = \frac{P_s}{f_s - f_s^2}
+$$
+
+where `Ps` is the probability of borrowing a segment and `fs` is its typological frequency. Empirical estimations for the probability of borrowing and the typological frequency are estimated from SegBo and PHOIBLE, respectively.
+
+Get the typological frequency of segments in phoible.
+
+```{r}
+num_phoible_inventories <- phoible %>% select(Inventory_ID) %>% distinct() %>% nrow()
+phoible_segment_counts <- as.data.frame(table(phoible$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
+```
+
+Get segbo segment frequencies.
+
+```{r}
+num_segbo_inventories <- segbo %>% select(Inventory_ID) %>% distinct() %>% nrow()
+segbo_segment_counts <- as.data.frame(table(segbo$Value))
+segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
+segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
+segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
+```
+
+Combine segbo and phoible.
+
+```{r}
+bs_df_new <- left_join(segbo_segment_counts, phoible_segment_counts)
+```
+
+Calculate all borrowability scores (can drop low frequency stuff later).
+
+```{r}
+bs_df_new$BorrowabilityScore <- bs_df_new$SegboCrossFreq / (bs_df_new$PhoibleCrossFreq - bs_df_new$PhoibleCrossFreq ^ 2)
+```
+
+Let's get the top 20 as a table for the publication.
+
+```{r}
+t <- bs_df_new %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=20) %>% select(Segment, BorrowabilityScore, PhoibleCrossFreq, SegboCrossFreq)
+
+t <- t %>% rename(Phoneme = Segment, Borrowability = BorrowabilityScore, `Typological Frequency` = PhoibleCrossFreq, `Borrowing Frequency` = SegboCrossFreq)
+
+library(xtable)
+# print(xtable(t), include.rownames=FALSE)
+```
+
+
+## Random sampling
+
+The problem, however, is that cross-linguistic frequency is treated as *all* the data points and not just a unique list of languages. So for example, segments in either data source (phoible or segbo) are counted multiple times -- consider the four inventories for Akan in phoible. 
+
+```{r}
+phoible %>% filter(Glottocode == "akan1250") %>% group_by(Inventory_ID, Glottocode, ISO639P3code, Name) %>% summarize(SegmentCount = n()) %>% kable()
+```
+
+So, segments that are shared across these inventories are counted more than one for the "same" language.
+
+Let's try random sampling one inventory per language from phoible and then calculate the borrowability scores. Later we can compare the results between various samples.
+
+```{r}
+phoible %>%
+    distinct(Inventory_ID, ISO639P3code) %>%
+    group_by(ISO639P3code) %>%
+    sample_n(1) %>%
+    pull(Inventory_ID) ->
+    inventory_ids_sampled_one_per_isocode
+
+phoible %>%
+    filter(Inventory_ID %in% inventory_ids_sampled_one_per_isocode) ->
+    my_sample
+
+num_phoible_inventories <- my_sample %>% select(Inventory_ID) %>% distinct() %>% nrow()
+phoible_segment_counts <- as.data.frame(table(my_sample$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
+```
+
+We'll use the same segbo counts from above, even though they produce the same problem, i.e. there are multiple reports ("inventories") for the same language.
+
+Combine segbo and random phoible.
+
+```{r}
+bs_df_random <- left_join(segbo_segment_counts, phoible_segment_counts)
+```
+
+Calculate all borrowability scores (can drop low frequency stuff later).
+
+```{r}
+bs_df_random$BorrowabilityScore <- bs_df_random$SegboCrossFreq / (bs_df_random$PhoibleCrossFreq - bs_df_random$PhoibleCrossFreq ^ 2)
+```
+
+Let's have a look.
+
+```{r}
+bs_df_random %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+
+## Collapse all inventories
+
+Nikolaev in BSD model 2 simply collapses all of the duplicate inventories into "single" languages, instead of randomizing or bootstrapping the samples. Let's do the same here for phoible and segbo. Then we can compare the original, randomly sampled, and all-inventories-as-one language approaches and the resulting borrowability scores.
+
+```{r}
+collapsed_inventories <- phoible %>% group_by(ISO639P3code) %>% select(ISO639P3code, Value)
+
+num_phoible_inventories <- collapsed_inventories %>% select(ISO639P3code) %>% distinct() %>% nrow()
+phoible_segment_counts <- as.data.frame(table(my_sample$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
+```
+
+And do the same for segbo.
+
+```{r}
+segbo_collapsed <- segbo %>% group_by(ISO639P3code, Value)
+num_segbo_inventories <- segbo %>% select(ISO639P3code) %>% distinct() %>% nrow()
+segbo_segment_counts <- as.data.frame(table(segbo$Value))
+segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
+segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
+segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
+```
+Combine them and get the borrowability score.
+
+```{r}
+bs_df_collapsed <- left_join(segbo_segment_counts, phoible_segment_counts)
+bs_df_collapsed$BorrowabilityScore <- bs_df_collapsed$SegboCrossFreq / (bs_df_collapsed$PhoibleCrossFreq - bs_df_collapsed$PhoibleCrossFreq ^ 2)
+```
+
+Let's have a look.
+
+```{r}
+bs_df_collapsed %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+
+# Compare the results
+
+Compare the frequencies.
+
+```{r}
+bs_df_new_cut <- bs_df_new %>% select(Segment, PhoibleCrossFreq, BorrowabilityScore)
+bs_df_collapsed_cut <- bs_df_collapsed %>% select(Segment, BorrowabilityScore)%>% rename(BorrowabilityScore_collapsed = BorrowabilityScore)
+bs_df_random_cut <- bs_df_random %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_random = BorrowabilityScore)
+
+results <- left_join(bs_df_new_cut, bs_df_collapsed_cut)
+results <- left_join(results, bs_df_random_cut)
+```
+
+Have a look.
+
+```{r}
+results %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+Compare the segment borrowability rankings.
+
+```{r}
+bs_df_new_cut <- bs_df_new %>% filter(PhoibleCrossFreq > .05) %>% select(Segment, PhoibleCrossFreq, BorrowabilityScore) %>% arrange(desc(BorrowabilityScore))
+
+bs_df_new_cut$OriginalRank <- seq.int(nrow(bs_df_new_cut))
+
+bs_df_collapsed_cut <- bs_df_collapsed %>% filter(PhoibleCrossFreq > .05) %>% select(Segment, BorrowabilityScore) %>% arrange(desc(BorrowabilityScore))
+
+bs_df_collapsed_cut$CollapsedRank <- seq.int(nrow(bs_df_collapsed_cut))
+
+bs_df_random_cut <- bs_df_random %>% filter(PhoibleCrossFreq > .05) %>% select(Segment, BorrowabilityScore) %>% arrange(desc(BorrowabilityScore))
+
+bs_df_random_cut$RandomizedRank <- seq.int(nrow(bs_df_random_cut))
+
+results <- left_join(bs_df_new_cut, bs_df_collapsed_cut, by = c("Segment"="Segment"))
+results <- left_join(results, bs_df_random_cut, by = c("Segment"="Segment"))
+
+```
+
+Let's have a look.
+
+```{r}
+results %>% select(-BorrowabilityScore, -BorrowabilityScore.x, -BorrowabilityScore.y) %>% kable()
+```
+
+# References
