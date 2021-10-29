@@ -29,7 +29,7 @@ languages <- read_csv('../data/phoible/cldf/languages.csv')
 phoible <- left_join(values, languages, by=c("Language_ID"="ID"))
 ```
 
-A segment's borrowability factor `bS` is calculated by @Eisen2019, pg60:
+A segment's borrowability factor `bS` is calculated by @Eisen2019[p.60]:
 
 $$
 b_s = \frac{P_s}{f_s - f_s^2}
@@ -207,13 +207,92 @@ bs_df_random_cut$RandomizedRank <- seq.int(nrow(bs_df_random_cut))
 
 results <- left_join(bs_df_new_cut, bs_df_collapsed_cut, by = c("Segment"="Segment"))
 results <- left_join(results, bs_df_random_cut, by = c("Segment"="Segment"))
-
 ```
 
 Let's have a look.
 
 ```{r}
-results %>% select(-BorrowabilityScore, -BorrowabilityScore.x, -BorrowabilityScore.y) %>% kable()
+tmp <- results %>% select(-BorrowabilityScore, -BorrowabilityScore.x, -BorrowabilityScore.y)
+tmp %>% kable()
+```
+
+Let's visualize the differences in ranks that are different. First we need to get the data into a format for plotting.
+
+```{r}
+diff_ranks <- tmp %>% select(Segment, OriginalRank, CollapsedRank) %>% filter(OriginalRank != CollapsedRank)
+
+x <- diff_ranks %>% select(Segment, OriginalRank)
+x$RankType <- 'OriginalRank'
+x <- x %>% rename(Rank = OriginalRank)
+
+y <- diff_ranks %>% select(Segment, CollapsedRank)
+y$RankType <- 'CollapsedRank'
+y <- y %>% rename(Rank = CollapsedRank)
+
+z <- rbind(x, y)
+```
+
+Now we plot using a slope graph.
+
+```{r}
+ggplot(data = z, aes(x = RankType, y = Rank, group = Segment)) +
+  geom_line(aes(color = Segment, alpha = 1), size = 2) +
+  geom_point(aes(color = Segment, alpha = 1), size = 4) +
+#  scale_y_discrete(limits = rev(levels(Rank))) +
+  #  Labelling as desired
+  labs(
+    title = "Original versus collapsed inventories",
+    # subtitle = "(Mainstreet Research)",
+    # caption = "https://www.mainstreetresearch.ca/gap-between-ndp-and-pcs-narrows-while-liberals-hold-steady/"
+  )
+```
+
+This is quite a bit. Let's plot the deltas of more than 3 rank changes.
+
+```{r}
+diff_ranks$delta <- abs(diff_ranks$OriginalRank - diff_ranks$CollapsedRank)
+top_deltas <- diff_ranks %>% arrange(desc(delta)) %>% filter(delta > 3)
+to_plot <- z %>% filter(Segment %in% top_deltas$Segment)
+
+ggplot(data = to_plot, aes(x = RankType, y = Rank, group = Segment)) +
+  geom_line(aes(color = Segment, alpha = 1), size = 2) +
+  geom_point(aes(color = Segment, alpha = 1), size = 4) +
+#  scale_y_discrete(limits = rev(levels(Rank))) +
+  #  Labelling as desired
+  labs(
+    title = "Original versus collapsed inventories",
+    # subtitle = "(Mainstreet Research)",
+    # caption = "https://www.mainstreetresearch.ca/gap-between-ndp-and-pcs-narrows-while-liberals-hold-steady/"
+  )
+```
+
+Also perhaps not so helpful. How about in terms of the more frequent segments with a delta.
+
+```{r}
+tmp$OCdelta <- abs(tmp$OriginalRank - tmp$CollapsedRank)
+tmp_by_freq_rank <- tmp %>% filter(OCdelta > 0) %>% arrange(desc(PhoibleCrossFreq, OriginalRank)) %>% head(n=10)
+
+x <- tmp_by_freq_rank %>% select(Segment, OriginalRank)
+x$RankType <- 'OriginalRank'
+x <- x %>% rename(Rank = OriginalRank)
+
+y <- tmp_by_freq_rank %>% select(Segment, CollapsedRank)
+y$RankType <- 'CollapsedRank'
+y <- y %>% rename(Rank = CollapsedRank)
+
+z <- rbind(x, y)
+
+ggplot(data = z, aes(x = RankType, y = Rank, group = Segment)) +
+  geom_line(aes(color = Segment, alpha = 1), size = 2) +
+  geom_point(aes(color = Segment, alpha = 1), size = 4) +
+#  scale_y_discrete(limits = rev(levels(Rank))) +
+  #  Labelling as desired
+  labs(
+    title = "Original versus collapsed inventories",
+    # subtitle = "(Mainstreet Research)",
+    # caption = "https://www.mainstreetresearch.ca/gap-between-ndp-and-pcs-narrows-while-liberals-hold-steady/"
+  )
+
 ```
 
 # References
