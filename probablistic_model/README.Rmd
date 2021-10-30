@@ -190,6 +190,13 @@ Have a look.
 results %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
 ```
 
+Let's write the data to disk.
+
+```{r}
+write_csv(results, 'borrowability_scores.csv')
+```
+
+
 Compare the segment borrowability rankings.
 
 ```{r}
