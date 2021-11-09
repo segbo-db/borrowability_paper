@@ -1,0 +1,6 @@
+[submodule "data/phoible"]
+	path = data/phoible
+	url = https://github.com/cldf-datasets/phoible.git
+[submodule "data/segbo"]
+	path = data/segbo
+	url = https://github.com/cldf-datasets/segbo.git
