@@ -268,7 +268,7 @@ Now get their segment counts.
 
 ```{r}
 num_segbo_inventories <- segbo_collapsed %>% select(ISO639P3code) %>% distinct() %>% nrow()
-segbo_segment_counts <- as.data.frame(table(segbo$Value))
+segbo_segment_counts <- as.data.frame(table(segbo_collapsed$Value))
 segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
 segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
 segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
