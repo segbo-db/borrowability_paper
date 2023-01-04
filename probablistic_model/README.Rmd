@@ -1,5 +1,5 @@
 ---
-title: "Generate borrowability scores with a probabilistic model of segment borrowability"
+title: "Model 1: A probabilistic model of segment borrowability"
 author: "Steven Moran and Elad Eisen"
 date: "(`r format(Sys.time(), '%d %B, %Y')`)"
 output:
@@ -7,17 +7,25 @@ output:
     toc: true
 bibliography: '../bibliography.bib'  
 ---
+
+<!-- author: "Steven Moran and Elad Eisen" -->
   
 # Overview
 
-This supplementary materials for "Defining and operationalizing borrowability for language contact research: Phonological segment borrowing as a case study" uses the R programming language [@R] and the following R libraries [@tidyverse;@knitr].
+This report includes supplementary materials for:
+
+>>> Defining and operationalizing borrowability for language contact research: Phonological segment borrowing as a case study
+
+And it uses the R programming language [@R] and the following R libraries [@tidyverse;@knitr].
 
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(knitr)
 ```
 
-Load the data from the [CLDF format](https://cldf.clld.org) [@Forkel_etal2018] and combine the tables into single dataframes for [PHOIBLE](https://phoible.org) [@MoranMcCloy2019] and [SegBo](https://github.com/segbo-db/segbo) [@segbo].
+# Data
+
+First, load the data from the [CLDF format](https://cldf.clld.org) [@Forkel_etal2018] and combine the tables into single data frames including [PHOIBLE](https://phoible.org) [@MoranMcCloy2019] and [SegBo](https://github.com/segbo-db/segbo) [@segbo].
 
 ```{r, message=FALSE}
 values <- read_csv('../data/segbo/cldf/values.csv')
@@ -29,7 +37,19 @@ languages <- read_csv('../data/phoible/cldf/languages.csv')
 phoible <- left_join(values, languages, by=c("Language_ID"="ID"))
 ```
 
-A segment's borrowability factor `bS` is calculated by @Eisen2019[p.60]:
+How many languages in SEGBO are also in PHOIBLE? There are currently 498 languages in SegBo, of which 199 are *not* in PHOIBLE.
+
+```{r}
+tmp1 <- segbo %>% select(Language_ID) %>% distinct()
+tmp2 <- phoible %>% select(Language_ID) %>% distinct()
+nrow(tmp1)
+nrow(tmp1[which(!(tmp1$Language_ID %in% tmp2$Language_ID)),])
+```
+
+
+# Analysis
+
+A segment's borrowability factor `bS` is calculated by @Eisen2019[p.60] as:
 
 $$
 b_s = \frac{P_s}{f_s - f_s^2}
@@ -57,19 +77,35 @@ segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
 segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
 ```
 
-Combine segbo and phoible.
+Which segments are in segbo that are not in phoible?
+
+```{r}
+segbo_segment_counts[which(!(segbo_segment_counts$Segment %in% phoible_segment_counts$Segment)),]
+# 154	halh1238		Mongolian	svantesson2005mongolian ʊai	mand1415 - from Mandarian, perhaps uai
+# 285	assa1263	ɹ̤	sans1269 -from Sanskrit
+# 304	chra1242	ɨə̯	viet1252-- from Vietnamese
+```
+
+Combine SEGBO and PHOIBLE
 
 ```{r}
 bs_df_new <- left_join(segbo_segment_counts, phoible_segment_counts)
 ```
 
-Calculate all borrowability scores (can drop low frequency stuff later).
+Calculate all borrowability scores.
 
 ```{r}
 bs_df_new$BorrowabilityScore <- bs_df_new$SegboCrossFreq / (bs_df_new$PhoibleCrossFreq - bs_df_new$PhoibleCrossFreq ^ 2)
+# write_csv(bs_df_new, 'all_borrowability_scores.csv')
 ```
 
-Let's get the top 20 as a table for the publication.
+Recall that these borrowability scores are not normalized (i.e. 0--1) and that the typological frequencies and borrowing frequencies use two different sets of languages, PHOIBLE and SEGBO samples respectively. That is, some of the languages from SEGBO are not in PHOIBLE, so borrowing frequencies can be in excess of their respective typological frequenies -- causing some rare segments borrowability coefficients to be quite high. For example:
+
+```{r}
+bs_df_new %>% arrange(desc(BorrowabilityScore)) %>% head(n=20) %>% select(Segment, BorrowabilityScore, PhoibleCrossFreq, SegboCrossFreq) %>% kable()
+```
+
+Here we display the top 20 with a cross-linguistic frequency greater than .05 to get a clearer picture of those segments in both databases. Below we take the intersection of the two, as per Model 2.
 
 ```{r}
 t <- bs_df_new %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=20) %>% select(Segment, BorrowabilityScore, PhoibleCrossFreq, SegboCrossFreq)
@@ -78,12 +114,13 @@ t <- t %>% rename(Phoneme = Segment, Borrowability = BorrowabilityScore, `Typolo
 
 library(xtable)
 # print(xtable(t), include.rownames=FALSE)
+t %>% kable()
 ```
 
 
 ## Random sampling
 
-The problem, however, is that cross-linguistic frequency is treated as *all* the data points and not just a unique list of languages. So for example, segments in either data source (phoible or segbo) are counted multiple times -- consider the four inventories for Akan in phoible. 
+One problem, however, is that cross-linguistic frequency is treated as *all* the data points and not just a unique list of languages. So for example, segments in either data source (PHOIBLE or SEGBO) are counted multiple times -- consider the four inventories for Akan in phoible.
 
 ```{r}
 phoible %>% filter(Glottocode == "akan1250") %>% group_by(Inventory_ID, Glottocode, ISO639P3code, Name) %>% summarize(SegmentCount = n()) %>% kable()
@@ -91,7 +128,7 @@ phoible %>% filter(Glottocode == "akan1250") %>% group_by(Inventory_ID, Glottoco
 
 So, segments that are shared across these inventories are counted more than one for the "same" language.
 
-Let's try random sampling one inventory per language from phoible and then calculate the borrowability scores. Later we can compare the results between various samples.
+Let's try random sampling one inventory per language from PHOIBLE and then calculate the borrowability scores. Later we can compare the results between various samples.
 
 ```{r}
 phoible %>%
@@ -112,15 +149,15 @@ phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
 ```
 
-We'll use the same segbo counts from above, even though they produce the same problem, i.e. there are multiple reports ("inventories") for the same language.
+We'll use the same SEGBO counts from above, even though they produce the same problem, i.e. there are multiple reports ("inventories") for the same language.
 
-Combine segbo and random phoible.
+Combine SEGBO and random PHOIBLE
 
 ```{r}
 bs_df_random <- left_join(segbo_segment_counts, phoible_segment_counts)
 ```
 
-Calculate all borrowability scores (can drop low frequency stuff later).
+Calculate all borrowability scores.
 
 ```{r}
 bs_df_random$BorrowabilityScore <- bs_df_random$SegboCrossFreq / (bs_df_random$PhoibleCrossFreq - bs_df_random$PhoibleCrossFreq ^ 2)
@@ -135,7 +172,7 @@ bs_df_random %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilitySc
 
 ## Collapse all inventories
 
-Nikolaev in BSD model 2 simply collapses all of the duplicate inventories into "single" languages, instead of randomizing or bootstrapping the samples. Let's do the same here for phoible and segbo. Then we can compare the original, randomly sampled, and all-inventories-as-one language approaches and the resulting borrowability scores.
+In contrast to the approach above, [Model 2](../neighbor-graph_model/A language-graph-based model of segment borrowing.ipynb) simply collapses all of the duplicate inventories into "single" languages, instead of randomizing or bootstrapping the samples. Let's do the same here for PHOIBLE and SEGBO. Then we can compare the original, randomly sampled, and all-inventories-as-one language approaches and the resulting borrowability scores.
 
 ```{r}
 collapsed_inventories <- phoible %>% group_by(ISO639P3code) %>% select(ISO639P3code, Value)
@@ -147,7 +184,7 @@ phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
 ```
 
-And do the same for segbo.
+And do the same for SEGBO
 
 ```{r}
 segbo_collapsed <- segbo %>% group_by(ISO639P3code, Value)
@@ -157,6 +194,7 @@ segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFre
 segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
 segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
 ```
+
 Combine them and get the borrowability score.
 
 ```{r}
@@ -171,9 +209,78 @@ bs_df_collapsed %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(Borrowabilit
 ```
 
 
+## Intersection of segments in PHOIBLE and SEGBO
+
+As per Model 2's assumptions, here we take the intersection of languages in SEGBO and PHOIBLE. Recall above that we calculate how many languages are in both databases. There are 498 languages in SEGBO and 2177 in PHOIBLE and 199 languages in SEGBO not in PHOIBLE, leaving 299 languages that are shared by both databases.
+
+```{r}
+tmp1 <- segbo %>% select(Language_ID) %>% distinct()
+tmp2 <- phoible %>% select(Language_ID) %>% distinct()
+nrow(tmp1)
+nrow(tmp2)
+nrow(tmp1[which(!(tmp1$Language_ID %in% tmp2$Language_ID)),])
+```
+
+Subset PHOIBLE to just the languages in both databases.
+
+```{r}
+phoible_intersection <- phoible %>% filter(phoible$Language_ID %in% tmp1$Language_ID)
+nrow(phoible_intersection %>% distinct(Language_ID))
+```
+
+We note again that PHOIBLE contains multiple doculects for the same language.
+
+```{r}
+phoible_intersection %>% group_by(Inventory_ID, Glottocode) %>% select(Language_ID, Glottocode) %>% distinct() %>% arrange(Glottocode) %>% head() %>% kable()
+```
+
+So again we randomly sample from those to get one language when PHOIBLE contains multiple doculects.
+
+```{r}
+phoible_intersection %>%
+    distinct(Inventory_ID, ISO639P3code) %>%
+    group_by(ISO639P3code) %>%
+    sample_n(1) %>%
+    pull(Inventory_ID) ->
+    inventory_ids_sampled_one_per_isocode
+
+phoible_intersection %>%
+    filter(Inventory_ID %in% inventory_ids_sampled_one_per_isocode) ->
+    my_sample
+```
+
+Now we generate the randomized and intersected segment counts.
+
+```{r}
+num_phoible_inventories <- my_sample %>% select(Inventory_ID) %>% distinct() %>% nrow()
+phoible_segment_counts <- as.data.frame(table(my_sample$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
+```
+
+Combine them.
+
+```{r}
+bs_df_intersected <- left_join(segbo_segment_counts, phoible_segment_counts)
+```
+
+Calculate all borrowability scores.
+
+```{r}
+bs_df_intersected$BorrowabilityScore <- bs_df_intersected$SegboCrossFreq / (bs_df_intersected$PhoibleCrossFreq - bs_df_intersected$PhoibleCrossFreq ^ 2)
+```
+
+Let’s have a look.
+
+```{r}
+bs_df_intersected %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+
 # Compare the results
 
-Compare the frequencies.
+Compare the results.
 
 ```{r}
 bs_df_new_cut <- bs_df_new %>% select(Segment, PhoibleCrossFreq, BorrowabilityScore)
@@ -195,7 +302,6 @@ Let's write the data to disk.
 ```{r}
 write_csv(results, 'borrowability_scores.csv')
 ```
-
 
 Compare the segment borrowability rankings.
 
@@ -277,7 +383,8 @@ Also perhaps not so helpful. How about in terms of the more frequent segments wi
 
 ```{r}
 tmp$OCdelta <- abs(tmp$OriginalRank - tmp$CollapsedRank)
-tmp_by_freq_rank <- tmp %>% filter(OCdelta > 0) %>% arrange(desc(PhoibleCrossFreq, OriginalRank)) %>% head(n=10)
+# tmp_by_freq_rank <- tmp %>% filter(OCdelta > 0) %>% arrange(desc(PhoibleCrossFreq, OriginalRank)) %>% head(n=10)
+tmp_by_freq_rank <- tmp %>% filter(OCdelta > 0) %>% arrange(desc(PhoibleCrossFreq)) %>% head(n=10)
 
 x <- tmp_by_freq_rank %>% select(Segment, OriginalRank)
 x$RankType <- 'OriginalRank'
