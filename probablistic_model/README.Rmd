@@ -221,7 +221,7 @@ nrow(tmp2)
 nrow(tmp1[which(!(tmp1$Language_ID %in% tmp2$Language_ID)),])
 ```
 
-Subset PHOIBLE to just the languages in both databases.
+Subset PHOIBLE to just the languages in Segbo.
 
 ```{r}
 phoible_intersection <- phoible %>% filter(phoible$Language_ID %in% tmp1$Language_ID)
@@ -234,35 +234,50 @@ We note again that PHOIBLE contains multiple doculects for the same language.
 phoible_intersection %>% group_by(Inventory_ID, Glottocode) %>% select(Language_ID, Glottocode) %>% distinct() %>% arrange(Glottocode) %>% head() %>% kable()
 ```
 
-So again we randomly sample from those to get one language when PHOIBLE contains multiple doculects.
+We simply collapse these different doculects into single phonological inventories. 
 
 ```{r}
-phoible_intersection %>%
-    distinct(Inventory_ID, ISO639P3code) %>%
-    group_by(ISO639P3code) %>%
-    sample_n(1) %>%
-    pull(Inventory_ID) ->
-    inventory_ids_sampled_one_per_isocode
-
-phoible_intersection %>%
-    filter(Inventory_ID %in% inventory_ids_sampled_one_per_isocode) ->
-    my_sample
+collapsed_inventories <- phoible_intersection %>% group_by(ISO639P3code) %>% select(ISO639P3code, Value)
 ```
 
-Now we generate the randomized and intersected segment counts.
+Nevertheless, we still want the typological frequency of segments from all of PHOIBLE for our borrowability scores.
 
 ```{r}
-num_phoible_inventories <- my_sample %>% select(Inventory_ID) %>% distinct() %>% nrow()
-phoible_segment_counts <- as.data.frame(table(my_sample$Value))
+num_phoible_inventories <- phoible %>% select(Inventory_ID) %>% distinct() %>% nrow()
+phoible_segment_counts <- as.data.frame(table(phoible$Value))
 phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
 phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
 ```
 
+We also want just the languages in SEGBO that are in PHOIBLE.
+
+```{r}
+segbo_intersection <- segbo %>% filter(Language_ID %in% phoible$Language_ID)
+segbo %>% select(Language_ID) %>% distinct() %>% nrow()
+segbo_intersection %>% select(Language_ID) %>% distinct() %>% nrow() # Should also be 299 like above
+```
+
+We also collapse doculects in SEGBO.
+
+```{r}
+segbo_collapsed <- segbo_intersection %>% group_by(ISO639P3code, Value)
+```
+
+Now get their segment counts.
+
+```{r}
+num_segbo_inventories <- segbo_collapsed %>% select(ISO639P3code) %>% distinct() %>% nrow()
+segbo_segment_counts <- as.data.frame(table(segbo$Value))
+segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
+segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
+segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
+```
+
 Combine them.
 
 ```{r}
-bs_df_intersected <- left_join(segbo_segment_counts, phoible_segment_counts)
+bs_df_intersected <- inner_join(segbo_segment_counts, phoible_segment_counts)
 ```
 
 Calculate all borrowability scores.
@@ -280,15 +295,17 @@ bs_df_intersected %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable
 
 # Compare the results
 
-Compare the results.
+Compare the results (but not the intersection results).
 
 ```{r}
 bs_df_new_cut <- bs_df_new %>% select(Segment, PhoibleCrossFreq, BorrowabilityScore)
 bs_df_collapsed_cut <- bs_df_collapsed %>% select(Segment, BorrowabilityScore)%>% rename(BorrowabilityScore_collapsed = BorrowabilityScore)
 bs_df_random_cut <- bs_df_random %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_random = BorrowabilityScore)
+bs_df_intersected <- bs_df_intersected %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_intersection = BorrowabilityScore)
 
 results <- left_join(bs_df_new_cut, bs_df_collapsed_cut)
 results <- left_join(results, bs_df_random_cut)
+results <- left_join(results, bs_df_intersected)
 ```
 
 Have a look.
