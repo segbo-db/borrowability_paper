@@ -14,7 +14,7 @@ bibliography: '../bibliography.bib'
 
 This report includes supplementary materials for:
 
->>> Defining and operationalizing borrowability for language contact research: Phonological segment borrowing as a case study
+>>> Operationalizing borrowability: A case study from phonological segments
 
 And it uses the R programming language [@R] and the following R libraries [@tidyverse;@knitr].
 
@@ -178,7 +178,7 @@ In contrast to the approach above, [Model 2](../neighbor-graph_model/A language-
 collapsed_inventories <- phoible %>% group_by(ISO639P3code) %>% select(ISO639P3code, Value)
 
 num_phoible_inventories <- collapsed_inventories %>% select(ISO639P3code) %>% distinct() %>% nrow()
-phoible_segment_counts <- as.data.frame(table(my_sample$Value))
+phoible_segment_counts <- as.data.frame(table(collapsed_inventories$Value))
 phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
 phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
@@ -189,7 +189,7 @@ And do the same for SEGBO
 ```{r}
 segbo_collapsed <- segbo %>% group_by(ISO639P3code, Value)
 num_segbo_inventories <- segbo %>% select(ISO639P3code) %>% distinct() %>% nrow()
-segbo_segment_counts <- as.data.frame(table(segbo$Value))
+segbo_segment_counts <- as.data.frame(table(segbo_collapsed$Value))
 segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
 segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
 segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / num_segbo_inventories
