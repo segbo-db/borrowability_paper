@@ -308,7 +308,13 @@ results <- left_join(results, bs_df_random_cut)
 results <- left_join(results, bs_df_intersected)
 ```
 
-Have a look.
+Have a look at all.
+
+```{r}
+results %>% arrange(desc(BorrowabilityScore_intersection)) %>% head(n=25) %>% kable()
+```
+
+Have a look at typologically frequent segments reported in PHOIBLE.
 
 ```{r}
 results %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
