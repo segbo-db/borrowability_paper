@@ -184,7 +184,7 @@ phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
 ```
 
-And do the same for SEGBO
+And do the same for SEGBO.
 
 ```{r}
 segbo_collapsed <- segbo %>% group_by(ISO639P3code, Value)
@@ -293,6 +293,133 @@ bs_df_intersected %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable
 ```
 
 
+## Accounting for negative data in Model 1
+
+So it turns out that the problem of negative data was present in Model 1 all along: 
+
+1. Either borrowing_relative_frequency should also be computed with num_phoible_inventories in the denominator, or 
+2. We should indeed take the intersection of SEGBO and PHOIBLE for typological_relative_frequency as well.
+
+Approach 1:
+
+```{r}
+# Let's start with computing borrowing relative frequency with the number of inventories in phoible in the denominator of our borrowability equation.
+# bs_df_new$BorrowabilityScore <- bs_df_new$SegboCrossFreq / (bs_df_new$PhoibleCrossFreq - bs_df_new$PhoibleCrossFreq ^ 2)
+
+```
+
+Approach 2:
+
+Let's take the intersection of SEGBO and PHOIBLE for borrowing and typological relative frequency.
+
+```{r}
+tmp1 <- segbo %>% select(Language_ID) %>% distinct()
+tmp2 <- phoible %>% select(Language_ID) %>% distinct()
+nrow(tmp1)
+nrow(tmp2)
+nrow(tmp1[which(!(tmp1$Language_ID %in% tmp2$Language_ID)),])
+
+shared_glottocodes <- intersect(tmp1$Language_ID, tmp2$Language_ID)
+length(shared_glottocodes)
+```
+
+Subset PHOIBLE to just the languages in Segbo.
+
+```{r}
+phoible_intersection <- phoible %>% filter(phoible$Language_ID %in% shared_glottocodes)
+nrow(phoible_intersection %>% distinct(Language_ID))
+```
+
+We note again that PHOIBLE contains multiple doculects for the same language.
+
+```{r}
+phoible_intersection %>% group_by(Inventory_ID, Glottocode) %>% select(Language_ID, Glottocode) %>% distinct() %>% arrange(Glottocode) %>% head() %>% kable()
+```
+
+We simply collapse these different doculects into single phonological inventories. The result is that if two phonological descriptions of the same dialect or language (as determined by their Glottocode) are different, e.g., one author posits 5 vowels and another 10 vowels, i.e., they present evidence for phonemic vowel length, then the resulting collapsed inventories is the union of the two vowel inventories. 
+
+```{r}
+collapsed_inventories <- phoible_intersection %>% select(Glottocode, Value) %>% group_by(Glottocode, Value) %>% distinct() %>% ungroup()
+nrow(collapsed_inventories %>% select(Glottocode) %>% distinct())
+```
+
+We also want just the languages in SEGBO that are in PHOIBLE.
+
+```{r}
+segbo_intersection <- segbo %>% filter(Language_ID %in% shared_glottocodes)
+segbo_intersection %>% select(Language_ID) %>% distinct() %>% nrow() # Should also be 299 like above
+```
+
+We also collapse doculects in SEGBO.
+
+```{r}
+segbo_collapsed <- segbo_intersection %>% select(Language_ID, Value) %>% group_by(Language_ID, Value) %>% distinct() %>% ungroup()
+segbo_collapsed <- segbo_collapsed %>% rename(Glottocode = Language_ID)
+nrow(segbo_collapsed %>% select(Glottocode) %>% distinct())
+```
+
+Now we are dealing with two potentially different samples. For example, if segment X occurs in a description (a doculect) in SEGBO, i.e., it is reported as a borrowed segment -- but that doculect is not in PHOIBLE, but another description is that e.g., does not describe borrowed segments -- then our "language" samples between databases differs. The result after applying the conditional probability borrowing equation will result in results outside the range of 0-1. Examples are given in the next section.
+
+To alleivate this issue, we make further assumption. In the few cases that different doculects represent the same dialect of language at the intersection of the two databases (PHOIBLE and SEGBO), borrowed segments are intersected (and if they aren't reported in PHOIBLE added to the inventory) in PHOIBLE. 
+
+
+```{r}
+collapsed_inventories <- rbind(collapsed_inventories, segbo_collapsed)
+collapsed_inventories <- collapsed_inventories %>% group_by(Glottocode, Value) %>% distinct() %>% ungroup()
+nrow(collapsed_inventories %>% select(Glottocode) %>% distinct())
+```
+
+Total inventories.
+
+```{r}
+length(unique(segbo_collapsed$Glottocode))
+length(unique(collapsed_inventories$Glottocode))
+
+# collapsed_inventories[which(!(unique(collapsed_inventories$ISO639P3code) %in% unique(segbo_collapsed$ISO639P3code))),]
+```
+
+Now get their respective segment counts and use the size of the intersected language sample in our borrowability equation.
+
+```{r}
+phoible_segment_counts <- as.data.frame(table(collapsed_inventories$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / length(shared_glottocodes)
+
+any(phoible_segment_counts$PhoibleCrossFreq > 1)
+any(phoible_segment_counts$PhoibleCrossFreq < 0)
+```
+
+
+```{r}
+segbo_segment_counts <- as.data.frame(table(segbo_collapsed$Value))
+segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
+segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
+segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / length(shared_glottocodes)
+
+any(segbo_segment_counts$PhoibleCrossFreq > 1)
+any(segbo_segment_counts$PhoibleCrossFreq < 0)
+```
+
+Combine them.
+
+```{r}
+bs_df_intersected_merged <- inner_join(segbo_segment_counts, phoible_segment_counts)
+```
+
+Calculate borrowability scores.
+
+```{r}
+bs_df_intersected_merged$BorrowabilityScore <- bs_df_intersected_merged$SegboCrossFreq / (bs_df_intersected_merged$PhoibleCrossFreq - bs_df_intersected_merged$PhoibleCrossFreq ^ 2)
+```
+
+Let's have a look. But we still get values over one...
+
+```{r}
+bs_df_intersected_merged %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+
 # Compare the results
 
 Compare the results (but not the intersection results).
@@ -302,8 +429,11 @@ bs_df_new_cut <- bs_df_new %>% select(Segment, PhoibleCrossFreq, BorrowabilitySc
 bs_df_collapsed_cut <- bs_df_collapsed %>% select(Segment, BorrowabilityScore)%>% rename(BorrowabilityScore_collapsed = BorrowabilityScore)
 bs_df_random_cut <- bs_df_random %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_random = BorrowabilityScore)
 bs_df_intersected <- bs_df_intersected %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_intersection = BorrowabilityScore)
+bs_df_intersected_merged <- bs_df_intersected_merged %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_no_neg_data = BorrowabilityScore)
 
-results <- left_join(bs_df_new_cut, bs_df_collapsed_cut)
+
+results <- left_join(bs_df_intersected_merged, bs_df_new_cut)
+results <- left_join(results, bs_df_collapsed_cut)
 results <- left_join(results, bs_df_random_cut)
 results <- left_join(results, bs_df_intersected)
 ```
@@ -311,7 +441,7 @@ results <- left_join(results, bs_df_intersected)
 Have a look at all.
 
 ```{r}
-results %>% arrange(desc(BorrowabilityScore_intersection)) %>% head(n=25) %>% kable()
+results %>% arrange(desc(BorrowabilityScore_no_neg_data)) %>% head(n=25) %>% kable()
 ```
 
 Have a look at typologically frequent segments reported in PHOIBLE.

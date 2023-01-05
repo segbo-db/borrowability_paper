@@ -1,7 +1,7 @@
 Model 1: A probabilistic model of segment borrowability
 ================
 Steven Moran and Elad Eisen
-(04 January, 2023)
+(05 January, 2023)
 
 -   <a href="#overview" id="toc-overview">Overview</a>
 -   <a href="#data" id="toc-data">Data</a>
@@ -12,6 +12,9 @@ Steven Moran and Elad Eisen
     -   <a href="#intersection-of-segments-in-phoible-and-segbo"
         id="toc-intersection-of-segments-in-phoible-and-segbo">Intersection of
         segments in PHOIBLE and SEGBO</a>
+    -   <a href="#accounting-for-negative-data-in-model-1"
+        id="toc-accounting-for-negative-data-in-model-1">Accounting for negative
+        data in Model 1</a>
 -   <a href="#compare-the-results" id="toc-compare-the-results">Compare the
     results</a>
 -   <a href="#references" id="toc-references">References</a>
@@ -280,31 +283,31 @@ bs_df_random %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilitySc
 
 | Segment | SegboFreq | SegboCrossFreq | PhoibleFreq | PhoibleCrossFreq | BorrowabilityScore |
 |:--------|----------:|---------------:|------------:|-----------------:|-------------------:|
-| f       |       148 |      0.2792453 |         919 |        0.4378275 |          1.1345227 |
-| p       |        48 |      0.0905660 |        1806 |        0.8604097 |          0.7540582 |
-| d̠ʒ      |        75 |      0.1415094 |         570 |        0.2715579 |          0.7153654 |
+| f       |       148 |      0.2792453 |         917 |        0.4368747 |          1.1350733 |
+| p       |        48 |      0.0905660 |        1804 |        0.8594569 |          0.7497763 |
+| d̠ʒ      |        75 |      0.1415094 |         582 |        0.2772749 |          0.7061577 |
 | ɡ       |        84 |      0.1584906 |        1204 |        0.5736065 |          0.6480056 |
-| t̠ʃ      |        71 |      0.1339623 |         832 |        0.3963792 |          0.5598961 |
-| z       |        60 |      0.1132075 |         633 |        0.3015722 |          0.5374803 |
+| t̠ʃ      |        71 |      0.1339623 |         838 |        0.3992377 |          0.5585322 |
+| z       |        60 |      0.1132075 |         621 |        0.2958552 |          0.5434183 |
 | ʒ       |        34 |      0.0641509 |         295 |        0.1405431 |          0.5310915 |
-| b       |        64 |      0.1207547 |        1325 |        0.6312530 |          0.5187668 |
-| v       |        54 |      0.1018868 |         577 |        0.2748928 |          0.5111546 |
-| h       |        64 |      0.1207547 |        1206 |        0.5745593 |          0.4940037 |
+| b       |        64 |      0.1207547 |        1333 |        0.6350643 |          0.5210388 |
+| v       |        54 |      0.1018868 |         581 |        0.2767985 |          0.5089731 |
+| h       |        64 |      0.1207547 |        1199 |        0.5712244 |          0.4930231 |
 | k       |        19 |      0.0358491 |        1914 |        0.9118628 |          0.4460555 |
-| j       |        19 |      0.0358491 |        1896 |        0.9032873 |          0.4103630 |
-| d       |        54 |      0.1018868 |        1009 |        0.4807051 |          0.4081550 |
-| r       |        52 |      0.0981132 |         964 |        0.4592663 |          0.3950749 |
-| x       |        30 |      0.0566038 |         373 |        0.1777037 |          0.3873652 |
-| ʃ       |        46 |      0.0867925 |         732 |        0.3487375 |          0.3821442 |
-| l       |        42 |      0.0792453 |        1463 |        0.6969986 |          0.3752294 |
-| ɸ       |         9 |      0.0169811 |         105 |        0.0500238 |          0.3573362 |
-| q       |        12 |      0.0226415 |         161 |        0.0767032 |          0.3197059 |
-| s       |        34 |      0.0641509 |        1456 |        0.6936636 |          0.3018948 |
-| ɾ       |        30 |      0.0566038 |         540 |        0.2572654 |          0.2962309 |
-| χ       |         9 |      0.0169811 |         134 |        0.0638399 |          0.2841346 |
+| d       |        54 |      0.1018868 |        1000 |        0.4764173 |          0.4084558 |
+| r       |        52 |      0.0981132 |         942 |        0.4487851 |          0.3966140 |
+| x       |        30 |      0.0566038 |         370 |        0.1762744 |          0.3898285 |
+| j       |        19 |      0.0358491 |        1883 |        0.8970939 |          0.3883278 |
+| ʃ       |        46 |      0.0867925 |         738 |        0.3515960 |          0.3807083 |
+| l       |        42 |      0.0792453 |        1458 |        0.6946165 |          0.3735792 |
+| ɸ       |         9 |      0.0169811 |         107 |        0.0509767 |          0.3510091 |
+| q       |        12 |      0.0226415 |         159 |        0.0757504 |          0.3233936 |
+| s       |        34 |      0.0641509 |        1437 |        0.6846117 |          0.2971072 |
+| ɾ       |        30 |      0.0566038 |         542 |        0.2582182 |          0.2955169 |
+| χ       |         9 |      0.0169811 |         130 |        0.0619343 |          0.2922823 |
 | ɣ       |        17 |      0.0320755 |         278 |        0.1324440 |          0.2791536 |
-| w       |        18 |      0.0339623 |        1768 |        0.8423059 |          0.2556885 |
-| o       |        31 |      0.0584906 |        1344 |        0.6403049 |          0.2539595 |
+| o       |        31 |      0.0584906 |        1336 |        0.6364936 |          0.2528015 |
+| w       |        18 |      0.0339623 |        1760 |        0.8384945 |          0.2507894 |
 
 ## Collapse all inventories
 
@@ -326,7 +329,7 @@ phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
 ```
 
-And do the same for SEGBO
+And do the same for SEGBO.
 
 ``` r
 segbo_collapsed <- segbo %>% group_by(ISO639P3code, Value)
@@ -540,6 +543,241 @@ bs_df_intersected %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable
 | ɣʲ      |         1 |      0.0009718 |           6 |        0.0019868 |          0.4901218 |
 | œ̃       |         1 |      0.0009718 |           6 |        0.0019868 |          0.4901218 |
 
+## Accounting for negative data in Model 1
+
+So it turns out that the problem of negative data was present in Model 1
+all along:
+
+1.  Either borrowing_relative_frequency should also be computed with
+    num_phoible_inventories in the denominator, or
+2.  We should indeed take the intersection of SEGBO and PHOIBLE for
+    typological_relative_frequency as well.
+
+Approach 1:
+
+``` r
+# Let's start with computing borrowing relative frequency with the number of inventories in phoible in the denominator of our borrowability equation.
+# bs_df_new$BorrowabilityScore <- bs_df_new$SegboCrossFreq / (bs_df_new$PhoibleCrossFreq - bs_df_new$PhoibleCrossFreq ^ 2)
+```
+
+Approach 2:
+
+Let’s take the intersection of SEGBO and PHOIBLE for borrowing and
+typological relative frequency.
+
+``` r
+tmp1 <- segbo %>% select(Language_ID) %>% distinct()
+tmp2 <- phoible %>% select(Language_ID) %>% distinct()
+nrow(tmp1)
+```
+
+    ## [1] 498
+
+``` r
+nrow(tmp2)
+```
+
+    ## [1] 2177
+
+``` r
+nrow(tmp1[which(!(tmp1$Language_ID %in% tmp2$Language_ID)),])
+```
+
+    ## [1] 199
+
+``` r
+shared_glottocodes <- intersect(tmp1$Language_ID, tmp2$Language_ID)
+length(shared_glottocodes)
+```
+
+    ## [1] 299
+
+Subset PHOIBLE to just the languages in Segbo.
+
+``` r
+phoible_intersection <- phoible %>% filter(phoible$Language_ID %in% shared_glottocodes)
+nrow(phoible_intersection %>% distinct(Language_ID))
+```
+
+    ## [1] 299
+
+We note again that PHOIBLE contains multiple doculects for the same
+language.
+
+``` r
+phoible_intersection %>% group_by(Inventory_ID, Glottocode) %>% select(Language_ID, Glottocode) %>% distinct() %>% arrange(Glottocode) %>% head() %>% kable()
+```
+
+    ## Adding missing grouping variables: `Inventory_ID`
+
+| Inventory_ID | Language_ID | Glottocode |
+|-------------:|:------------|:-----------|
+|         1160 | abau1245    | abau1245   |
+|          235 | abip1241    | abip1241   |
+|         1914 | abip1241    | abip1241   |
+|         1093 | achi1257    | achi1257   |
+|          712 | adam1253    | adam1253   |
+|         1234 | adam1253    | adam1253   |
+
+We simply collapse these different doculects into single phonological
+inventories. The result is that if two phonological descriptions of the
+same dialect or language (as determined by their Glottocode) are
+different, e.g., one author posits 5 vowels and another 10 vowels, i.e.,
+they present evidence for phonemic vowel length, then the resulting
+collapsed inventories is the union of the two vowel inventories.
+
+``` r
+collapsed_inventories <- phoible_intersection %>% select(Glottocode, Value) %>% group_by(Glottocode, Value) %>% distinct() %>% ungroup()
+nrow(collapsed_inventories %>% select(Glottocode) %>% distinct())
+```
+
+    ## [1] 299
+
+We also want just the languages in SEGBO that are in PHOIBLE.
+
+``` r
+segbo_intersection <- segbo %>% filter(Language_ID %in% shared_glottocodes)
+segbo_intersection %>% select(Language_ID) %>% distinct() %>% nrow() # Should also be 299 like above
+```
+
+    ## [1] 299
+
+We also collapse doculects in SEGBO.
+
+``` r
+segbo_collapsed <- segbo_intersection %>% select(Language_ID, Value) %>% group_by(Language_ID, Value) %>% distinct() %>% ungroup()
+segbo_collapsed <- segbo_collapsed %>% rename(Glottocode = Language_ID)
+nrow(segbo_collapsed %>% select(Glottocode) %>% distinct())
+```
+
+    ## [1] 299
+
+Now we are dealing with two potentially different samples. For example,
+if segment X occurs in a description (a doculect) in SEGBO, i.e., it is
+reported as a borrowed segment – but that doculect is not in PHOIBLE,
+but another description is that e.g., does not describe borrowed
+segments – then our “language” samples between databases differs. The
+result after applying the conditional probability borrowing equation
+will result in results outside the range of 0-1. Examples are given in
+the next section.
+
+To alleivate this issue, we make further assumption. In the few cases
+that different doculects represent the same dialect of language at the
+intersection of the two databases (PHOIBLE and SEGBO), borrowed segments
+are intersected (and if they aren’t reported in PHOIBLE added to the
+inventory) in PHOIBLE.
+
+``` r
+collapsed_inventories <- rbind(collapsed_inventories, segbo_collapsed)
+collapsed_inventories <- collapsed_inventories %>% group_by(Glottocode, Value) %>% distinct() %>% ungroup()
+nrow(collapsed_inventories %>% select(Glottocode) %>% distinct())
+```
+
+    ## [1] 299
+
+Total inventories.
+
+``` r
+length(unique(segbo_collapsed$Glottocode))
+```
+
+    ## [1] 299
+
+``` r
+length(unique(collapsed_inventories$Glottocode))
+```
+
+    ## [1] 299
+
+``` r
+# collapsed_inventories[which(!(unique(collapsed_inventories$ISO639P3code) %in% unique(segbo_collapsed$ISO639P3code))),]
+```
+
+Now get their respective segment counts and use the size of the
+intersected language sample in our borrowability equation.
+
+``` r
+phoible_segment_counts <- as.data.frame(table(collapsed_inventories$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / length(shared_glottocodes)
+
+any(phoible_segment_counts$PhoibleCrossFreq > 1)
+```
+
+    ## [1] FALSE
+
+``` r
+any(phoible_segment_counts$PhoibleCrossFreq < 0)
+```
+
+    ## [1] FALSE
+
+``` r
+segbo_segment_counts <- as.data.frame(table(segbo_collapsed$Value))
+segbo_segment_counts <- segbo_segment_counts %>% rename(Segment = Var1, SegboFreq = Freq)
+segbo_segment_counts$Segment <- as.character(segbo_segment_counts$Segment)
+segbo_segment_counts$SegboCrossFreq <- segbo_segment_counts$SegboFreq / length(shared_glottocodes)
+
+any(segbo_segment_counts$PhoibleCrossFreq > 1)
+```
+
+    ## [1] FALSE
+
+``` r
+any(segbo_segment_counts$PhoibleCrossFreq < 0)
+```
+
+    ## [1] FALSE
+
+Combine them.
+
+``` r
+bs_df_intersected_merged <- inner_join(segbo_segment_counts, phoible_segment_counts)
+```
+
+    ## Joining, by = "Segment"
+
+Calculate borrowability scores.
+
+``` r
+bs_df_intersected_merged$BorrowabilityScore <- bs_df_intersected_merged$SegboCrossFreq / (bs_df_intersected_merged$PhoibleCrossFreq - bs_df_intersected_merged$PhoibleCrossFreq ^ 2)
+```
+
+Let’s have a look. But we still get values over one…
+
+``` r
+bs_df_intersected_merged %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+| Segment | SegboFreq | SegboCrossFreq | PhoibleFreq | PhoibleCrossFreq | BorrowabilityScore |
+|:--------|----------:|---------------:|------------:|-----------------:|-------------------:|
+| p       |        31 |      0.1036789 |         278 |        0.9297659 |           1.587701 |
+| f       |       101 |      0.3377926 |         191 |        0.6387960 |           1.463981 |
+| ðˠ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| dzʱ     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| d̠̤ʒ̤      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ɨə̯      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| l̪ˤ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| mbʷ     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ɱ       |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| n̺d̺z̺     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| n̪ˤ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| œ̃ː      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| pʷ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| pʷʰ     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| pʷʼ     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| pˤ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ɸʷ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ɹ̤       |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| tˠ      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| tsʷ     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| tsʷʰ    |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| uə̯      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ʊa      |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ʊai     |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+| ʕ̞       |         1 |      0.0033445 |           1 |        0.0033445 |           1.003356 |
+
 # Compare the results
 
 Compare the results (but not the intersection results).
@@ -549,8 +787,16 @@ bs_df_new_cut <- bs_df_new %>% select(Segment, PhoibleCrossFreq, BorrowabilitySc
 bs_df_collapsed_cut <- bs_df_collapsed %>% select(Segment, BorrowabilityScore)%>% rename(BorrowabilityScore_collapsed = BorrowabilityScore)
 bs_df_random_cut <- bs_df_random %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_random = BorrowabilityScore)
 bs_df_intersected <- bs_df_intersected %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_intersection = BorrowabilityScore)
+bs_df_intersected_merged <- bs_df_intersected_merged %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_no_neg_data = BorrowabilityScore)
 
-results <- left_join(bs_df_new_cut, bs_df_collapsed_cut)
+
+results <- left_join(bs_df_intersected_merged, bs_df_new_cut)
+```
+
+    ## Joining, by = "Segment"
+
+``` r
+results <- left_join(results, bs_df_collapsed_cut)
 ```
 
     ## Joining, by = "Segment"
@@ -570,36 +816,36 @@ results <- left_join(results, bs_df_intersected)
 Have a look at all.
 
 ``` r
-results %>% arrange(desc(BorrowabilityScore_intersection)) %>% head(n=25) %>% kable()
+results %>% arrange(desc(BorrowabilityScore_no_neg_data)) %>% head(n=25) %>% kable()
 ```
 
-| Segment | PhoibleCrossFreq | BorrowabilityScore | BorrowabilityScore_collapsed | BorrowabilityScore_random | BorrowabilityScore_intersection |
-|:--------|-----------------:|-------------------:|-----------------------------:|--------------------------:|--------------------------------:|
-| ðˤ      |        0.0006623 |         17.1056679 |                   12.7591209 |                23.7735903 |                       2.9368332 |
-| ðˠ      |        0.0003311 |          5.7000006 |                    4.2510131 |                 3.9622651 |                       2.9358604 |
-| d̠̤ʒ̤      |        0.0003311 |          5.7000006 |                    4.2510131 |                 3.9622651 |                       2.9358604 |
-| l̪ˤ      |        0.0003311 |          5.7000006 |                    4.2510131 |                        NA |                       2.9358604 |
-| n̪ˤ      |        0.0003311 |          5.7000006 |                    4.2510131 |                        NA |                       2.9358604 |
-| tsʲʰ    |        0.0003311 |          5.7000006 |                    4.2510131 |                        NA |                       2.9358604 |
-| ɕː      |        0.0023179 |          4.0795367 |                    3.0451466 |                 3.9698338 |                       1.6809753 |
-| ɮʲ      |        0.0013245 |          2.8528352 |                    2.1285502 |                 3.9641545 |                       1.4693903 |
-| pʷʰ     |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
-| pʷʼ     |        0.0006623 |          2.8509446 |                    2.1265201 |                 1.9820773 |                       1.4684166 |
-| pˤ      |        0.0006623 |          5.7018893 |                    4.2530403 |                 3.9641545 |                       1.4684166 |
-| ɸʷ      |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
-| uə̯      |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
-| tˠ      |        0.0009934 |          1.9012597 |                    1.4183565 |                 1.3220153 |                       0.9792689 |
-| ʊa      |        0.0009934 |          1.9012597 |                    1.4183565 |                 1.9820773 |                       0.9792689 |
-| tˤ      |        0.0026490 |          1.4283119 |                    1.0663110 |                 1.3239102 |                       0.7356709 |
-| dzʱ     |        0.0013245 |          1.4264176 |                    1.0642751 |                 0.9919847 |                       0.7346952 |
-| r̝       |        0.0013245 |          1.4264176 |                    1.0642751 |                 1.9820773 |                       0.7346952 |
-| ʡ       |        0.0013245 |          2.8528352 |                    2.1285502 |                 3.9641545 |                       0.7346952 |
-| sˤ      |        0.0033113 |          1.1434088 |                    0.8538655 |                 1.1353226 |                       0.5889277 |
-| œ̃ː      |        0.0016556 |          1.1415126 |                    0.8518267 |                 1.9820773 |                       0.5879511 |
-| sˠ      |        0.0016556 |          1.1415126 |                    0.8518267 |                 1.9820773 |                       0.5879511 |
-| tsʷʰ    |        0.0016556 |          1.1415126 |                    0.8518267 |                 0.9919847 |                       0.5879511 |
-| ɣʲ      |        0.0019868 |          0.9515761 |                    0.7101947 |                 1.9820773 |                       0.4901218 |
-| œ̃       |        0.0019868 |          0.9515761 |                    0.7101947 |                 0.7939668 |                       0.4901218 |
+| Segment | BorrowabilityScore_no_neg_data | PhoibleCrossFreq | BorrowabilityScore | BorrowabilityScore_collapsed | BorrowabilityScore_random | BorrowabilityScore_intersection |
+|:--------|-------------------------------:|-----------------:|-------------------:|-----------------------------:|--------------------------:|--------------------------------:|
+| p       |                       1.587701 |        0.8586093 |          0.7460172 |                   -0.3342025 |                 0.7497763 |                       0.2481589 |
+| f       |                       1.463981 |        0.4403974 |          1.1330821 |                    1.2905703 |                 1.1350733 |                       0.4022169 |
+| ðˠ      |                       1.003356 |        0.0003311 |          5.7000006 |                    4.2510131 |                 3.9622651 |                       2.9358604 |
+| dzʱ     |                       1.003356 |        0.0013245 |          1.4264176 |                    1.0642751 |                 0.9919847 |                       0.7346952 |
+| d̠̤ʒ̤      |                       1.003356 |        0.0003311 |          5.7000006 |                    4.2510131 |                 3.9622651 |                       2.9358604 |
+| ɨə̯      |                       1.003356 |               NA |                 NA |                           NA |                        NA |                              NA |
+| l̪ˤ      |                       1.003356 |        0.0003311 |          5.7000006 |                    4.2510131 |                        NA |                       2.9358604 |
+| mbʷ     |                       1.003356 |        0.0049669 |          0.3817704 |                    0.2853047 |                 0.2847836 |                       0.1966359 |
+| ɱ       |                       1.003356 |        0.0059603 |          0.3184600 |                    0.2380967 |                 0.2348656 |                       0.1640270 |
+| n̺d̺z̺     |                       1.003356 |               NA |                 NA |                           NA |                        NA |                              NA |
+| n̪ˤ      |                       1.003356 |        0.0003311 |          5.7000006 |                    4.2510131 |                        NA |                       2.9358604 |
+| œ̃ː      |                       1.003356 |        0.0016556 |          1.1415126 |                    0.8518267 |                 1.3220153 |                       0.5879511 |
+| pʷ      |                       1.003356 |        0.0172185 |          0.1114989 |                    0.0837870 |                 0.0985190 |                       0.0574290 |
+| pʷʰ     |                       1.003356 |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
+| pʷʼ     |                       1.003356 |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
+| pˤ      |                       1.003356 |        0.0006623 |          5.7018893 |                    4.2530403 |                 3.9641545 |                       1.4684166 |
+| ɸʷ      |                       1.003356 |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
+| ɹ̤       |                       1.003356 |               NA |                 NA |                           NA |                        NA |                              NA |
+| tˠ      |                       1.003356 |        0.0009934 |          1.9012597 |                    1.4183565 |                 1.3220153 |                       0.9792689 |
+| tsʷ     |                       1.003356 |        0.0033113 |          0.5717044 |                    0.4269328 |                 0.4969412 |                       0.2944639 |
+| tsʷʰ    |                       1.003356 |        0.0016556 |          1.1415126 |                    0.8518267 |                 0.9919847 |                       0.5879511 |
+| uə̯      |                       1.003356 |        0.0006623 |          2.8509446 |                    2.1265201 |                 3.9622651 |                       1.4684166 |
+| ʊa      |                       1.003356 |        0.0009934 |          1.9012597 |                    1.4183565 |                 1.9820773 |                       0.9792689 |
+| ʊai     |                       1.003356 |               NA |                 NA |                           NA |                        NA |                              NA |
+| ʕ̞       |                       1.003356 |               NA |                 NA |                           NA |                        NA |                              NA |
 
 Have a look at typologically frequent segments reported in PHOIBLE.
 
@@ -607,33 +853,33 @@ Have a look at typologically frequent segments reported in PHOIBLE.
 results %>% filter(PhoibleCrossFreq > .05) %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
 ```
 
-| Segment | PhoibleCrossFreq | BorrowabilityScore | BorrowabilityScore_collapsed | BorrowabilityScore_random | BorrowabilityScore_intersection |
-|:--------|-----------------:|-------------------:|-----------------------------:|--------------------------:|--------------------------------:|
-| f       |        0.4403974 |          1.1330821 |                    1.2905703 |                 1.1345227 |                       0.4022169 |
-| p       |        0.8586093 |          0.7460172 |                   -0.3342025 |                 0.7540582 |                       0.2481589 |
-| d̠ʒ      |        0.2715232 |          0.7154228 |                    0.6377857 |                 0.7153654 |                       0.1572215 |
-| ɡ       |        0.5668874 |          0.6455142 |                    1.1307393 |                 0.6480056 |                       0.2058213 |
-| t̠ʃ      |        0.4033113 |          0.5566655 |                    0.5901101 |                 0.5598961 |                       0.1171101 |
-| z       |        0.2956954 |          0.5435886 |                    0.4968787 |                 0.5374803 |                       0.1773222 |
-| b       |        0.6311258 |          0.5186924 |                    1.5516640 |                 0.5187668 |                       0.1753233 |
-| v       |        0.2701987 |          0.5166900 |                    0.4600181 |                 0.5111546 |                       0.1527772 |
-| h       |        0.5639073 |          0.4910408 |                    0.8463852 |                 0.4940037 |                       0.1343622 |
-| ʒ       |        0.1582781 |          0.4815191 |                    0.3913505 |                 0.5310915 |                       0.1604788 |
-| k       |        0.9036424 |          0.4117135 |                   -0.0985615 |                 0.4460555 |                       0.0892878 |
-| d       |        0.4556291 |          0.4107821 |                    0.4840999 |                 0.4081550 |                       0.1488887 |
-| r       |        0.4410596 |          0.3979832 |                    0.4539434 |                 0.3950749 |                       0.1182614 |
-| j       |        0.8993377 |          0.3959937 |                   -0.1011199 |                 0.4103630 |                       0.0858786 |
-| ʃ       |        0.3655629 |          0.3742237 |                    0.3734768 |                 0.3821442 |                       0.1340861 |
-| x       |        0.1900662 |          0.3676977 |                    0.3056592 |                 0.3873652 |                       0.1388842 |
-| l       |        0.6768212 |          0.3622902 |                    3.3319896 |                 0.3752294 |                       0.1066299 |
-| ɸ       |        0.0506623 |          0.3530705 |                    0.2695915 |                 0.3573362 |                       0.1414417 |
-| ð       |        0.0529801 |          0.3384500 |                    0.2587275 |                 0.3815209 |                       0.1743231 |
-| ɾ       |        0.2562914 |          0.2969673 |                    0.2608930 |                 0.2962309 |                       0.1121684 |
-| q       |        0.0847682 |          0.2918376 |                    0.2268370 |                 0.3197059 |                       0.1127361 |
-| s       |        0.6692053 |          0.2897912 |                    1.9236051 |                 0.3018948 |                       0.0878004 |
-| ɣ       |        0.1443709 |          0.2596617 |                    0.2091068 |                 0.2791536 |                       0.0944063 |
-| χ       |        0.0711921 |          0.2568084 |                    0.1981623 |                 0.2841346 |                       0.1322725 |
-| o       |        0.6046358 |          0.2446778 |                    0.5546209 |                 0.2539595 |                       0.1016327 |
+| Segment | BorrowabilityScore_no_neg_data | PhoibleCrossFreq | BorrowabilityScore | BorrowabilityScore_collapsed | BorrowabilityScore_random | BorrowabilityScore_intersection |
+|:--------|-------------------------------:|-----------------:|-------------------:|-----------------------------:|--------------------------:|--------------------------------:|
+| f       |                      1.4639810 |        0.4403974 |          1.1330821 |                    1.2905703 |                 1.1350733 |                       0.4022169 |
+| p       |                      1.5877013 |        0.8586093 |          0.7460172 |                   -0.3342025 |                 0.7497763 |                       0.2481589 |
+| d̠ʒ      |                      0.4399080 |        0.2715232 |          0.7154228 |                    0.6377857 |                 0.7061577 |                       0.1572215 |
+| ɡ       |                      0.8805074 |        0.5668874 |          0.6455142 |                    1.1307393 |                 0.6480056 |                       0.2058213 |
+| t̠ʃ      |                      0.3877003 |        0.4033113 |          0.5566655 |                    0.5901101 |                 0.5585322 |                       0.1171101 |
+| z       |                      0.5223908 |        0.2956954 |          0.5435886 |                    0.4968787 |                 0.5434183 |                       0.1773222 |
+| b       |                      0.7804304 |        0.6311258 |          0.5186924 |                    1.5516640 |                 0.5210388 |                       0.1753233 |
+| v       |                      0.4511780 |        0.2701987 |          0.5166900 |                    0.4600181 |                 0.5089731 |                       0.1527772 |
+| h       |                      0.5439272 |        0.5639073 |          0.4910408 |                    0.8463852 |                 0.4930231 |                       0.1343622 |
+| ʒ       |                      0.3915476 |        0.1582781 |          0.4815191 |                    0.3913505 |                 0.5310915 |                       0.1604788 |
+| k       |                      0.3118481 |        0.9036424 |          0.4117135 |                   -0.0985615 |                 0.4460555 |                       0.0892878 |
+| d       |                      0.5248522 |        0.4556291 |          0.4107821 |                    0.4840999 |                 0.4084558 |                       0.1488887 |
+| r       |                      0.4155166 |        0.4410596 |          0.3979832 |                    0.4539434 |                 0.3966140 |                       0.1182614 |
+| j       |                      0.2879153 |        0.8993377 |          0.3959937 |                   -0.1011199 |                 0.3883278 |                       0.0858786 |
+| ʃ       |                      0.4340410 |        0.3655629 |          0.3742237 |                    0.3734768 |                 0.3807083 |                       0.1340861 |
+| x       |                      0.3289329 |        0.1900662 |          0.3676977 |                    0.3056592 |                 0.3898285 |                       0.1388842 |
+| l       |                      0.5587045 |        0.6768212 |          0.3622902 |                    3.3319896 |                 0.3735792 |                       0.1066299 |
+| ɸ       |                      0.3171212 |        0.0506623 |          0.3530705 |                    0.2695915 |                 0.3510091 |                       0.1414417 |
+| ð       |                      0.3436782 |        0.0529801 |          0.3384500 |                    0.2587275 |                 0.3852616 |                       0.1743231 |
+| ɾ       |                      0.3119014 |        0.2562914 |          0.2969673 |                    0.2608930 |                 0.2955169 |                       0.1121684 |
+| q       |                      0.2063967 |        0.0847682 |          0.2918376 |                    0.2268370 |                 0.3233936 |                       0.1127361 |
+| s       |                      0.4456036 |        0.6692053 |          0.2897912 |                    1.9236051 |                 0.2971072 |                       0.0878004 |
+| ɣ       |                      0.2385638 |        0.1443709 |          0.2596617 |                    0.2091068 |                 0.2791536 |                       0.0944063 |
+| χ       |                      0.2653846 |        0.0711921 |          0.2568084 |                    0.1981623 |                 0.2922823 |                       0.1322725 |
+| o       |                      0.3857069 |        0.6046358 |          0.2446778 |                    0.5546209 |                 0.2528015 |                       0.1016327 |
 
 Let’s write the data to disk.
 
@@ -680,11 +926,11 @@ tmp %>% kable()
 | h       |        0.5639073 |            9 |             7 |             10 |
 | ʒ       |        0.1582781 |           10 |            17 |              7 |
 | k       |        0.9036424 |           11 |            99 |             11 |
-| d       |        0.4556291 |           12 |            13 |             13 |
-| r       |        0.4410596 |           13 |            16 |             14 |
-| j       |        0.8993377 |           14 |           100 |             12 |
+| d       |        0.4556291 |           12 |            13 |             12 |
+| r       |        0.4410596 |           13 |            16 |             13 |
+| j       |        0.8993377 |           14 |           100 |             15 |
 | ʃ       |        0.3655629 |           15 |            18 |             16 |
-| x       |        0.1900662 |           16 |            20 |             15 |
+| x       |        0.1900662 |           16 |            20 |             14 |
 | l       |        0.6768212 |           17 |             1 |             17 |
 | ɸ       |        0.0506623 |           18 |            21 |             18 |
 | ð       |        0.0529801 |           19 |            23 |             NA |
@@ -693,69 +939,69 @@ tmp %>% kable()
 | s       |        0.6692053 |           22 |             2 |             20 |
 | ɣ       |        0.1443709 |           23 |            25 |             23 |
 | χ       |        0.0711921 |           24 |            26 |             22 |
-| o       |        0.6046358 |           25 |            10 |             25 |
-| w       |        0.8221854 |           26 |           101 |             24 |
+| o       |        0.6046358 |           25 |            10 |             24 |
+| w       |        0.8221854 |           26 |           101 |             25 |
 | ts      |        0.2208609 |           27 |            27 |             26 |
 | dz      |        0.1033113 |           28 |            31 |             28 |
 | e       |        0.6096026 |           29 |            14 |             27 |
 | ʔ       |        0.3748344 |           30 |            28 |             29 |
-| ŋ       |        0.6284768 |           31 |            11 |             32 |
-| m       |        0.9652318 |           32 |            96 |             33 |
+| ŋ       |        0.6284768 |           31 |            11 |             31 |
+| m       |        0.9652318 |           32 |            96 |             32 |
 | ʁ       |        0.0513245 |           33 |            34 |             NA |
 | ɲ       |        0.4158940 |           34 |            30 |             34 |
 | c       |        0.1384106 |           35 |            35 |             35 |
 | ɟ       |        0.1218543 |           36 |            36 |             36 |
-| y       |        0.0579470 |           37 |            38 |             NA |
-| β       |        0.1013245 |           38 |            39 |             38 |
-| æ       |        0.0738411 |           39 |            42 |             37 |
-| ə       |        0.2235099 |           40 |            40 |             40 |
-| ɽ       |        0.0592715 |           41 |            46 |             41 |
-| mb      |        0.1046358 |           42 |            45 |             42 |
+| y       |        0.0579470 |           37 |            38 |             33 |
+| β       |        0.1013245 |           38 |            39 |             37 |
+| æ       |        0.0738411 |           39 |            42 |             38 |
+| ə       |        0.2235099 |           40 |            40 |             41 |
+| ɽ       |        0.0592715 |           41 |            46 |             40 |
+| mb      |        0.1046358 |           42 |            45 |             43 |
 | pʰ      |        0.1963576 |           43 |            44 |             39 |
-| ɛ       |        0.3738411 |           44 |            41 |             43 |
-| nd      |        0.0970199 |           45 |            48 |             46 |
-| ɔː      |        0.1019868 |           46 |            51 |             45 |
+| ɛ       |        0.3738411 |           44 |            41 |             42 |
+| nd      |        0.0970199 |           45 |            48 |             45 |
+| ɔː      |        0.1019868 |           46 |            51 |             47 |
 | t       |        0.6834437 |           47 |             6 |             44 |
 | ɔ       |        0.3543046 |           48 |            47 |             48 |
-| oː      |        0.2099338 |           49 |            52 |             53 |
-| pʼ      |        0.0592715 |           50 |            54 |             47 |
-| ŋɡ      |        0.0960265 |           51 |            55 |             55 |
+| oː      |        0.2099338 |           49 |            52 |             52 |
+| pʼ      |        0.0592715 |           50 |            54 |             46 |
+| ŋɡ      |        0.0960265 |           51 |            55 |             54 |
 | tʰ      |        0.1337748 |           52 |            53 |             49 |
 | ʂ       |        0.0655629 |           53 |            57 |             50 |
-| kʰ      |        0.2006623 |           54 |            56 |             52 |
-| ɑ       |        0.0745033 |           55 |            58 |             54 |
-| t̠ʃʰ     |        0.0758278 |           56 |            59 |             51 |
-| kp      |        0.1235099 |           57 |            60 |             59 |
+| kʰ      |        0.2006623 |           54 |            56 |             51 |
+| ɑ       |        0.0745033 |           55 |            58 |             55 |
+| t̠ʃʰ     |        0.0758278 |           56 |            59 |             53 |
+| kp      |        0.1235099 |           57 |            60 |             60 |
 | ɗ       |        0.0821192 |           58 |            63 |             61 |
 | ɖ       |        0.0850993 |           59 |            66 |             56 |
 | d̪       |        0.1440397 |           60 |            67 |             57 |
 | eː      |        0.2122517 |           61 |            65 |             62 |
-| ɪ       |        0.1470199 |           62 |            68 |             60 |
+| ɪ       |        0.1470199 |           62 |            68 |             59 |
 | n       |        0.7781457 |           63 |            98 |             58 |
 | t̪       |        0.2344371 |           64 |            69 |             63 |
 | ɛː      |        0.1069536 |           65 |            72 |             65 |
-| ɭ       |        0.1188742 |           66 |            73 |             66 |
+| ɭ       |        0.1188742 |           66 |            73 |             67 |
 | u       |        0.8761589 |           67 |            97 |             64 |
 | ɳ       |        0.1321192 |           68 |            74 |             69 |
-| t̠ʃʼ     |        0.0612583 |           69 |            76 |             67 |
+| t̠ʃʼ     |        0.0612583 |           69 |            76 |             66 |
 | ʊ       |        0.1354305 |           70 |            75 |             70 |
 | ɡʷ      |        0.0629139 |           71 |            78 |             71 |
 | tsʰ     |        0.0645695 |           72 |            79 |             68 |
 | ʈ       |        0.1592715 |           73 |            80 |             72 |
-| ɨ       |        0.1625828 |           74 |            81 |             77 |
+| ɨ       |        0.1625828 |           74 |            81 |             75 |
 | aː      |        0.2953642 |           75 |            77 |             76 |
 | ɔ̃       |        0.0758278 |           76 |            83 |             78 |
 | n̪       |        0.1764901 |           77 |            82 |             73 |
 | ɛ̃       |        0.0794702 |           78 |            84 |             79 |
 | kʼ      |        0.0804636 |           79 |            85 |             74 |
-| o̞       |        0.0956954 |           80 |            86 |             75 |
-| ɓ       |        0.0993377 |           81 |            88 |             81 |
-| õ       |        0.1142384 |           82 |            90 |             82 |
+| o̞       |        0.0956954 |           80 |            86 |             77 |
+| ɓ       |        0.0993377 |           81 |            88 |             80 |
+| õ       |        0.1142384 |           82 |            90 |             81 |
 | uː      |        0.2937086 |           83 |            87 |             83 |
 | kʷ      |        0.1231788 |           84 |            91 |             85 |
 | iː      |        0.3178808 |           85 |            89 |             84 |
 | ɡb      |        0.1238411 |           86 |            92 |             86 |
-| a       |        0.8609272 |           87 |            95 |             80 |
+| a       |        0.8609272 |           87 |            95 |             82 |
 | ã       |        0.1725166 |           88 |            93 |             87 |
 | ĩ       |        0.1794702 |           89 |            94 |             88 |
 
@@ -791,7 +1037,7 @@ ggplot(data = z, aes(x = RankType, y = Rank, group = Segment)) +
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-52-1.png)<!-- -->
 
 This is quite a bit. Let’s plot the deltas of more than 3 rank changes.
 
@@ -812,7 +1058,7 @@ ggplot(data = to_plot, aes(x = RankType, y = Rank, group = Segment)) +
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-53-1.png)<!-- -->
 
 Also perhaps not so helpful. How about in terms of the more frequent
 segments with a delta.
@@ -844,7 +1090,7 @@ ggplot(data = z, aes(x = RankType, y = Rank, group = Segment)) +
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
 
 # References
 
