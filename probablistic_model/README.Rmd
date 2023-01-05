@@ -420,6 +420,39 @@ bs_df_intersected_merged %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>
 ```
 
 
+Try to repair the algorithm wit
+
+P(contact) = 6 * fs * (1 - fs)
+
+and because of normalization, so:
+
+P(borrowing) = P(contact) * P(borrowing|contact) = 6 * fs * (1 - fs) * bs
+
+and 
+
+bs = Ps / (fs - fs^2) / 6
+
+So, re-calculate borrowability scores.
+
+```{r}
+bs_df_intersected_merged$BorrowabilityScore <- bs_df_intersected_merged$SegboCrossFreq / (bs_df_intersected_merged$PhoibleCrossFreq - bs_df_intersected_merged$PhoibleCrossFreq ^ 2) / 6
+```
+
+But x / (x-x^2) still tends to infinity as x tends to 1, and surpasses 6 somewhere after x = 0.8 [here]( (https://www.wolframalpha.com/input?i=plot+x+%2F+%28x+-+x%5E2%29+from+0+to+1).
+
+We note that given the nature of the data sets, if we see 1 occurrence of borrowed segment X in SEGBO and also just 1 occurrence of it in PHOIBLE, it means that the only occurrence of that documented sound is borrowed -- which theoretically could be the case  intersected between these two databases. 
+
+And this may actually happen even with the best possible data: if a language borrowed a rare segment from another language and then the latter than quickly lost it, it may be recorded as recent borrowing in one language and not recorded at all in another or anywhere else.
+
+Again, this is marginal, so we can be upfront about this. Or we can apply Laplace smoothing and bump up typological frequencies of all segments by 1 (unless they appear in all languages) to break the ties.
+
+Have a look.
+
+```{r}
+bs_df_intersected_merged
+```
+
+
 # Compare the results
 
 Compare the results (but not the intersection results).
