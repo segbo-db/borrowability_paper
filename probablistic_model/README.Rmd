@@ -449,7 +449,7 @@ Again, this is marginal, so we can be upfront about this. Or we can apply Laplac
 Have a look.
 
 ```{r}
-bs_df_intersected_merged
+bs_df_intersected_merged %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
 ```
 
 
