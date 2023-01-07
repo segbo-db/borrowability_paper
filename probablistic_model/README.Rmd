@@ -453,6 +453,39 @@ bs_df_intersected_merged %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>
 ```
 
 
+## Accounting for negative data in Model 1 with typological frequencies from PHOIBLE
+
+Now let's try the same intersection model, but with typological frequencies from ALL of PHOIBLE.
+
+```{r}
+phoible_segment_counts <- as.data.frame(table(collapsed_inventories$Value))
+phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
+phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
+phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
+
+any(phoible_segment_counts$PhoibleCrossFreq > 1)
+any(phoible_segment_counts$PhoibleCrossFreq < 0)
+```
+
+Combine them.
+
+```{r}
+bs_df_intersected_merged_all_phoible <- inner_join(segbo_segment_counts, phoible_segment_counts)
+```
+
+Calculate borrowability scores with the new formula.
+
+```{r}
+bs_df_intersected_merged_all_phoible$BorrowabilityScore <- bs_df_intersected_merged_all_phoible$SegboCrossFreq / (bs_df_intersected_merged_all_phoible$PhoibleCrossFreq - bs_df_intersected_merged_all_phoible$PhoibleCrossFreq ^ 2) / 6
+```
+
+Let's have a look. But we still get values over one...
+
+```{r}
+bs_df_intersected_merged_all_phoible %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>% kable()
+```
+
+
 # Compare the results
 
 Compare the results (but not the intersection results).
@@ -463,9 +496,10 @@ bs_df_collapsed_cut <- bs_df_collapsed %>% select(Segment, BorrowabilityScore)%>
 bs_df_random_cut <- bs_df_random %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_random = BorrowabilityScore)
 bs_df_intersected <- bs_df_intersected %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_intersection = BorrowabilityScore)
 bs_df_intersected_merged <- bs_df_intersected_merged %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_no_neg_data = BorrowabilityScore)
+bs_df_intersected_merged_all_phoible <- bs_df_intersected_merged_all_phoible %>% select(Segment, BorrowabilityScore) %>% rename(BorrowabilityScore_no_neg_data_all_phoible = BorrowabilityScore)
 
-
-results <- left_join(bs_df_intersected_merged, bs_df_new_cut)
+results <- left_join(bs_df_intersected_merged_all_phoible, bs_df_intersected_merged)
+results <- left_join(results, bs_df_new_cut)
 results <- left_join(results, bs_df_collapsed_cut)
 results <- left_join(results, bs_df_random_cut)
 results <- left_join(results, bs_df_intersected)
