@@ -509,7 +509,7 @@ results <- left_join(results, bs_df_intersected)
 Have a look at all.
 
 ```{r}
-results %>% arrange(desc(BorrowabilityScore_no_neg_data)) %>% head(n=25) %>% kable()
+results %>% arrange(desc(BorrowabilityScore_no_neg_data_all_phoible)) %>% head(n=25) %>% kable()
 ```
 
 Have a look at typologically frequent segments reported in PHOIBLE.
