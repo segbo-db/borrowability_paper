@@ -458,7 +458,8 @@ bs_df_intersected_merged %>% arrange(desc(BorrowabilityScore)) %>% head(n=25) %>
 Now let's try the same intersection model, but with typological frequencies from ALL of PHOIBLE.
 
 ```{r}
-phoible_segment_counts <- as.data.frame(table(collapsed_inventories$Value))
+num_phoible_inventories <- phoible %>% select(Inventory_ID) %>% distinct() %>% nrow()
+phoible_segment_counts <- as.data.frame(table(phoible$Value))
 phoible_segment_counts <- phoible_segment_counts %>% rename(Segment = Var1, PhoibleFreq = Freq)
 phoible_segment_counts$Segment <- as.character(phoible_segment_counts$Segment)
 phoible_segment_counts$PhoibleCrossFreq <- phoible_segment_counts$PhoibleFreq / num_phoible_inventories
