@@ -740,4 +740,18 @@ df %>% filter(Subtype == "rhotic") %>% summarize(mean(Borrowability))
 df %>% filter(Subtype == "stop") %>% summarize(mean(Borrowability))
 ```
 
+Borrowability by voiced / voiceless.
+
+
+```{r}
+c_voiceless <- df %>% filter(Type == "consonant") %>% filter(ConsonantVoicing == 0)
+mean(c_voiceless$Borrowability)
+```
+
+```{r}
+c_voiceless <- df %>% filter(Type == "consonant") %>% filter(ConsonantVoicing == 1)
+mean(c_voiceless$Borrowability)
+```
+
+
 # References
