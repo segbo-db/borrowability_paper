@@ -696,6 +696,48 @@ p <- ggplot(segbo_data, aes(x=PHOIBLE_frequency_relative, y=SEGBO_frequency_rela
 p
 ```
 
+# Other stats
 
+Some stats for the paper.
+
+Load the data.
+
+```{r}
+df <- read_csv("model_1_borrowability_w_features.csv", col_types = cols(Segment = col_character()))
+```
+
+Get the average of consonants.
+
+```{r}
+# c <- df %>% filter(Type == "consonant")
+# mean(c$Borrowability)
+
+df %>% filter(Type == "consonant") %>% summarize(mean(Borrowability))
+```
+
+Get the average of vowels
+
+```{r}
+df %>% filter(Type == "vowel") %>% summarize(mean(Borrowability))
+```
+
+Features.
+
+```{r}
+table(df$Subtype)
+```
+
+Borrowability averages by feature.
+
+```{r}
+df %>% filter(Subtype == "affricate") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "approximant") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "fricative") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "lateral") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "nasal") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "plain") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "rhotic") %>% summarize(mean(Borrowability))
+df %>% filter(Subtype == "stop") %>% summarize(mean(Borrowability))
+```
 
 # References
