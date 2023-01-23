@@ -630,4 +630,72 @@ ggplot(data = z, aes(x = RankType, y = Rank, group = Segment)) +
 
 ```
 
+
+# Figures
+
+Figures for the paper.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+library(dplyr)
+```
+
+Load the data.
+
+```{r}
+segbo_data <- read_csv("model_1_borrowability.csv", col_types = cols(Segment = col_character()))
+```
+
+
+```{r, freq_scatter}
+p <- ggplot(segbo_data, aes(x=PHOIBLE_frequency_relative, y=SEGBO_frequency_relative)) +
+  # ggtitle(paste('Borrowing frequency vs. typological frequency'))  +
+  xlab("Typological frequency") + 
+  ylab("Frequency of borrowing")+
+  geom_text(label=segbo_data$Segment)+ xlim(0, 1)+ ylim(0, 0.05)
+
+# ggsave(file="freq_scatter.svg", plot=p, width=10, height=6)
+# pdf("freq_scatter.pdf", width=10, height=6)
+# p
+# dev.off()
+p
+```
+
+Plot.
+
+```{r, freq_scatter_w_lines}
+for (i in 1:nrow(segbo_data)) {
+  if (segbo_data[i,"PHOIBLE_frequency_relative"]>0.8) {
+    segbo_data[i,"group"] <- "5"
+  } else if (segbo_data[i,"PHOIBLE_frequency_relative"]>0.6){
+    segbo_data[i,"group"] <- "4"
+  } else if (segbo_data[i,"PHOIBLE_frequency_relative"]>0.4){
+    segbo_data[i,"group"] <- "3"
+  } else if (segbo_data[i,"PHOIBLE_frequency_relative"]>0.2){
+    segbo_data[i,"group"] <- "2"
+  } else {
+    segbo_data[i,"group"] <- "1"
+  }
+}
+
+p <- ggplot(segbo_data, aes(x=PHOIBLE_frequency_relative, y=SEGBO_frequency_relative, color = group)) + #geom_point() + 
+  # ggtitle('Borrowing frequency vs. typological frequency') + 
+  xlab("Typological frequency") + 
+  ylab("Frequency of borrowing")+ 
+  geom_text(label=segbo_data$Segment)+ xlim(0, 1)+ ylim(0, 0.05) +
+  geom_smooth(method = "lm", formula = y ~ 1, linewidth = 2, se = 0) +
+  theme(legend.position = "none") +
+  scale_color_manual(values=c("#E69F00", "#009E73", "#D55E00", "#0072B2", "#CC79A7"))
+
+#ggsave(file="freq_scatter_w_lines.svg", plot=p, width=10, height=6)
+#pdf("freq_scatter_w_lines.pdf", width=10, height=6)
+#p
+#dev.off()
+p
+```
+
+
+
 # References
