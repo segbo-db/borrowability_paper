@@ -753,5 +753,10 @@ c_voiceless <- df %>% filter(Type == "consonant") %>% filter(ConsonantVoicing ==
 mean(c_voiceless$Borrowability)
 ```
 
+Wilcoxon rank-sum test for whether consonants or vowels are statistically more significant when comparing mean scores.
+
+```{r}
+wilcox.test(Borrowability ~ Type, data = df, conf.int = T)
+```
 
 # References
